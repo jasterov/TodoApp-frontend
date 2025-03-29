@@ -8,16 +8,33 @@
       <li v-for="todo in todos" :key="todo.id" class="todo-item">
         <div class="todo-content">
           <span class="todo-title">{{ todo.title }}</span>
-          <span class="todo-status" :class="{ done: todo.completed, notdone: !todo.completed }">
+          <span
+            class="todo-status"
+            :class="{ done: todo.completed, notdone: !todo.completed }"
+          >
             {{ todo.completed ? texts.completed : texts.notCompleted }}
           </span>
         </div>
         <div class="buttons">
-          <button class="edit-button" @click="editTodo(todo)">{{ texts.edit }}</button>
-          <button class="delete-button" @click="remove(todo.id)">{{ texts.delete }}</button>
+          <button class="edit-button" @click="edit(todo)">
+            {{ texts.edit }}
+          </button>
+          <button class="delete-button" @click="remove(todo.id)">
+            {{ texts.delete }}
+          </button>
         </div>
       </li>
     </ul>
+
+    <div class="pagination">
+      <button @click="prevPage" :disabled="currentPage === 0">
+        {{ texts.prev }}
+      </button>
+      <span>{{ texts.page }} {{ currentPage + 1 }} z {{ totalPages }}</span>
+      <button @click="nextPage" :disabled="currentPage >= totalPages - 1">
+        {{ texts.next }}
+      </button>
+    </div>
 
     <div v-if="showForm" class="modal-overlay">
       <div class="modal">
@@ -32,47 +49,68 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import TodoForm from './TodoForm.vue'
-import texts from '../locales/cs'
-import type { TodoEntry } from '../types/TodoEntry'
-import api from '../api/axios'
+import { ref, onMounted } from "vue";
+import TodoForm from "./TodoForm.vue";
+import texts from "../locales/cs";
+import type { TodoEntry } from "../types/TodoEntry";
+import { getTodos, deleteTodo } from "../api/todos";
 
-const todos = ref<TodoEntry[]>([])
-const selectedTodo = ref<TodoEntry | null>(null)
-const showForm = ref(false)
+const todos = ref<TodoEntry[]>([]);
+const selectedTodo = ref<TodoEntry | null>(null);
+const showForm = ref(false);
+const currentPage = ref(0);
+const totalPages = ref(1);
+const pageSize = 5;
 
 const loadTodos = async () => {
-  const res = await api.get('/todos')
-  todos.value = res.data
-}
+  const res = await getTodos(currentPage.value, pageSize);
+  todos.value = res.data.content;
+  totalPages.value = res.data.totalPages;
+};
 
-onMounted(loadTodos)
+onMounted(loadTodos);
 
 const remove = async (id: number) => {
-  await api.delete(`/todos/${id}`)
-  await loadTodos()
-}
+  await deleteTodo(id);
+  if (todos.value.length === 1 && currentPage.value > 0) {
+    currentPage.value--;
+  }
+  await loadTodos();
+};
 
-const editTodo = (todo: TodoEntry) => {
-  selectedTodo.value = { ...todo }
-  showForm.value = true
-}
+const edit = (todo: TodoEntry) => {
+  selectedTodo.value = { ...todo };
+  showForm.value = true;
+};
 
 const startNew = () => {
-  selectedTodo.value = null
-  showForm.value = true
-}
+  selectedTodo.value = null;
+  showForm.value = true;
+};
 
 const cancelEdit = () => {
-  selectedTodo.value = null
-  showForm.value = false
-}
+  selectedTodo.value = null;
+  showForm.value = false;
+};
 
 const handleSave = () => {
-  loadTodos()
-  showForm.value = false
-}
+  loadTodos();
+  showForm.value = false;
+};
+
+const prevPage = () => {
+  if (currentPage.value > 0) {
+    currentPage.value--;
+    loadTodos();
+  }
+};
+
+const nextPage = () => {
+  if (currentPage.value < totalPages.value - 1) {
+    currentPage.value++;
+    loadTodos();
+  }
+};
 </script>
 
 <style scoped>
@@ -179,5 +217,12 @@ const handleSave = () => {
   border-radius: 10px;
   width: 90%;
   max-width: 500px;
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 20px;
 }
 </style>

@@ -16,11 +16,7 @@
     />
 
     <div class="checkbox-row">
-      <input
-        type="checkbox"
-        id="completed"
-        v-model="todoCopy.completed"
-      />
+      <input type="checkbox" id="completed" v-model="todoCopy.completed" />
       <label for="completed">{{ texts.done }}</label>
     </div>
 
@@ -32,46 +28,46 @@
 </template>
 
 <script setup lang="ts">
-import { watch, reactive, toRaw } from 'vue'
-import api from '../api/axios'
-import texts from '../locales'
-import type { TodoEntry } from '../types/TodoEntry'
+import { watch, reactive, toRaw } from "vue";
+import texts from "../locales/cs";
+import type { TodoEntry } from "../types/TodoEntry";
+import { createTodo, updateTodo } from "../api/todos";
 
-const props = defineProps<{ todo: TodoEntry | null }>()
-const emit = defineEmits(['saved', 'cancelled'])
+const props = defineProps<{ todo: TodoEntry | null }>();
+const emit = defineEmits(["saved", "cancelled"]);
 
 const emptyTodo = (): TodoEntry => ({
-  title: '',
-  description: '',
-  completed: false
-})
+  title: "",
+  description: "",
+  completed: false,
+});
 
-const todoCopy = reactive<TodoEntry>(emptyTodo())
+const todoCopy = reactive<TodoEntry>(emptyTodo());
 
 watch(
   () => props.todo,
   (newVal) => {
-    Object.assign(todoCopy, newVal || emptyTodo())
+    Object.assign(todoCopy, newVal || emptyTodo());
   },
-  { immediate: true }
-)
+  { immediate: true },
+);
 
 const save = async () => {
-  const raw = toRaw(todoCopy)
+  const raw = toRaw(todoCopy);
 
-  if (!raw.title || raw.title.trim() === '') {
-    alert('Název úkolu nesmí být prázdný.')
-    return
+  if (!raw.title || raw.title.trim() === "") {
+    alert("Název úkolu nesmí být prázdný.");
+    return;
   }
 
   if (raw.id) {
-    await api.put(`/todos/${raw.id}`, raw)
+    await updateTodo(raw);
   } else {
-    await api.post('/todos', raw)
+    await createTodo(raw);
   }
 
-  emit('saved')
-}
+  emit("saved");
+};
 </script>
 
 <style scoped>

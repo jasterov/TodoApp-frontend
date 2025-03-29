@@ -1,4 +1,4 @@
-const cs = {
+const texts = {
   pageTitle: 'Můj TODO list',
   newTask: '➕ Nový úkol',
   edit: '✏️ Upravit',
@@ -11,7 +11,10 @@ const cs = {
   cancel: '❌ Zrušit',
   title: 'Název',
   description: 'Popis',
-  done: 'Hotovo'
+  done: 'Hotovo',
+  prev: '← Předchozí',
+  next: 'Další →',
+  page: 'Stránka'
 }
 
-export default cs
+export default texts
